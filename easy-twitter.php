@@ -98,9 +98,9 @@ function eztw_twitter_init(){
 
 function eztw_shortcode_handler($args){
 		
-	$eztw_username = get_option('eztw_username',TRUE);
-	$eztw_tweet_count = get_option('eztw_tweet_count',TRUE);
-	$eztw_use_cache = get_option('eztw_use_cache',0);
+	$eztw_username = get_option('eztw_username');
+	$eztw_tweet_count = get_option('eztw_tweet_count');
+	$eztw_use_cache = get_option('eztw_use_cache');
 	
 	// Detect overwrites
 	$eztw_username = ($args['username']) ? $args['username'] : $eztw_username;
