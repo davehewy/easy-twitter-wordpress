@@ -7,7 +7,9 @@
 	delete_option('eztw_use_cache');
 	
 	// Best way to cache stuff.
-	
+	delete_option('eztw_cache_timer');
+	delete_option('eztw_cached_tweet');
+	delete_option('eztw_cached_tweet_date');
 	
 
 ?>

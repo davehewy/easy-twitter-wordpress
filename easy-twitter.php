@@ -106,21 +106,43 @@ function eztw_shortcode_handler($args){
 	$eztw_username = ($args['username']) ? $args['username'] : $eztw_username;
 	$eztw_tweet_count = ($args['tweetcount']) ? $args['tweetcount'] : $eztw_tweet_count;
 	
+	// If cache is enabled store the values in the wordpress options.
+	$cache_tweet = time()+600;
+	$eztw_use_cached_tweet = false;
+	
+	if($eztw_use_cache){
+		$eztw_cache_timer = get_option('eztw_cache_timer');
+		$eztw_cached_tweet = get_option('eztw_cached_tweet');
+		$eztw_cached_tweet_date = get_option('eztw_cached_tweet_date');
+		if($eztw_cache_timer-time()>0){
+			$eztw_use_cached_tweet = true;
+		}
+	}
+	
 	// Force overwrites to be valid.
 	if($eztw_username 
 		&& strlen($eztw_username)>3 
 		&& is_numeric($eztw_tweet_count) 
-		&& $eztw_tweet_count>0){
+		&& $eztw_tweet_count>0 && !$eztw_use_cached_tweet){
+			
+			
 			
 			$opts = "?count=$eztw_tweet_count&screen_name=$eztw_username&include_entities=true&include_rts=true";
 			$json = file_get_contents("https://api.twitter.com/1/statuses/user_timeline.json$opts", true); 
 			$decoded_tweets = json_decode($json, true);
 			
 			if($eztw_tweet_count){
-				$html = eztw_twitterify($decoded_tweets[0]['text']);
 				
+				$html = eztw_twitterify($decoded_tweets[0]['text']);
 				// Make a nice date from the time.
 				$tweet_date = eztw_nice_tweet($decoded_tweets[0]['created_at']);
+
+				// Single cache method.
+				if($eztw_use_cache){
+					update_option('eztw_cache_timer',(time()+600));
+					update_option('eztw_cached_tweet',$decoded_tweets[0]['text']);
+					update_option('eztw_cached_tweet_date',$decoded_tweets[0]['created_at']);
+				}					
 				
 			}else{
 				
@@ -133,11 +155,21 @@ function eztw_shortcode_handler($args){
 			}
 		
 		
-		$html.= '<time>'.$tweet_date.'<a href="https://twitter.com/'.$eztw_username.'" class="follow-link" target="_blank" title="Follow us on twitter">@'.$eztw_username.'</a></time>';
+			$html.= '<time>'.$tweet_date.'<a href="https://twitter.com/'.$eztw_username.'" class="follow-link" target="_blank" title="Follow us on twitter">@'.$eztw_username.'</a></time>';
 		
-		return $html;
-	
+	}elseif($eztw_use_cached_tweet && $eztw_cached_tweet){
+								
+			$html = eztw_twitterify($eztw_cached_tweet);
+			$tweet_date = eztw_nice_tweet($eztw_cached_tweet_date);
+			
+			// Attach the html and the follow link username.
+			$html.= '<time>'.$tweet_date.'<a href="https://twitter.com/'.$eztw_username.'" class="follow-link" target="_blank" title="Follow us on twitter">@'.$eztw_username.'</a></time>';
+		
+		
+		
 	}
+	
+	return $html;
 
 }
 
